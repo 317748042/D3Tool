@@ -1,0 +1,966 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body style="overflow: hidden;">
+
+    <div id="test" style="float:left"></div>
+    <div style="position:absolute;width:400px; height:100%; overflow-y:scroll; background-color:beige;float:left; opacity:0.7;">
+        <div>
+            <button id="btnInitialization">初始化</button>
+            <button id="btnloadlayers">加载图层信息</button>
+            <button id="btnmeasure">测量</button>
+            <!--<button id="btnselects">框选</button>-->
+            <p>图层信息</p>
+            <div id="divlayers"></div>
+            <p>插入元素</p>
+            <!--<input id="btninsertg" type="button" value="先插入组元素，后面添加的元素全都包含在创建的组中" />-->
+            <p></p>
+            <input id="btninsertrectangle" type="button" value="插入矩形" />
+            <input id="btninsertcircle" type="button" value="插入圆" />
+            <input id="btninsertellipse" type="button" value="插入椭圆" />
+            <p>
+                <!--<input id="fileimage" type="file" />-->
+                <input id="btninsertimage" type="button" value="插入图片" />
+            </p>
+
+            <!--<input id="btninsertline" type="button" value="插入线条" />
+            <input id="btninsertpolygon" type="button" value="插入多边形" />
+            <input id="btninsertpolyline" type="button" value="插入折线" />
+            <input id="btninsertpath" type="button" value="插入路径" />-->
+            <p>
+                要插入的文字<input id="txtInsertText" type="text" />
+                <input id="btninserttext" type="button" value="插入文字" />
+            </p>
+
+        </div>
+        <p>
+            属性
+        </p>
+        <div>
+            <p>所选中元素Id</p>
+            <ul>
+                <li>Id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;：<input id="txtId" type="text" /></li>
+                <li></li>
+                <li>插入的形状会在这个坐标</li>
+                <li>坐标X：<input id="txtX" type="text" /></li>
+                <li>坐标Y：<input id="txtY" type="text" /></li>
+                <li></li>
+                <li>鼠标在html上的坐标</li>
+                <li>HtmlX<input id="htmlOffsetXValue" type="text" /></li>
+                <li>HtmlY<input id="htmlOffsetYValue" type="text" /></li>
+                <li>鼠标在svg上的坐标</li>
+                <li>SVGX<input id="SvgXValue" type="text" /></li>
+                <li>SVGY<input id="SvgYValue" type="text" /></li>
+                <!--<li>  <input id="btnSave" type="button" value="确定" /></li>-->
+            </ul>
+            <p>元素信息设置</p>
+            <ul>
+                <li>font-size:<input id="txtFontSize" type="text" /></li>
+                <li>x:<input id="txtsetX" type="text" /></li>
+                <li>y:<input id="txtsetY" type="text" /></li>
+                <li>width：<input id="txtsetwidth" type="text" /></li>
+                <li>hieght：<input id="txtsetheight" type="text" /></li>
+                <li>半径:<input id="txtradius" type="text" /></li>
+                <li><input id="btnSaveText" type="button" value="设置" /></li>
+            </ul>
+            <p>测量坐标</p>
+            <ul>
+                <li>第一点的X坐标<input id="txtmeasureX1" type="text" /></li>
+                <li>第一点的Y坐标<input id="txtmeasureY1" type="text" /></li>
+                <li>第二点的X坐标<input id="txtmeasureX2" type="text" /></li>
+                <li>第二点的Y坐标<input id="txtmeasureY2" type="text" /></li>
+                <li>两点之间的距离<input id="txtjuli" type="text" /></li>
+            </ul>
+        </div>
+
+    </div>
+    <script src="d3.min.js"></script>
+    <script>
+        (function ()
+        {
+            var d3svgTool = d3svgTool || {};
+            d3svgTool.prototype.Id = "";
+            d3svgTool.prototype.svgurl = "";
+            function d3svgTool(id, Svgurl)
+            {
+                this.Id = id;
+                this.svgurl = Svgurl;
+            }
+            //tar：传入指定 ID 的第一个对象的引用
+            //svgurl：svg文件相对路径
+            d3svgTool.prototype.load = function ()
+            {
+                var tar = document.getElementById(this.Id);
+
+                tar.innerHTML = "";
+                var cssstyle = "html, body,svg {height: 100%;}"
+                cssstyle += "html, body, div, svg {margin: 0;padding: 0;}"
+                //
+                cssstyle += ".svghover {fill: red;stroke: #FF0000;stroke-opacity: 0.8;}";
+                cssstyle += "#" + this.Id + "{ overflow:hidden;width:100%; height:100%;margin:auto 0 }"
+                d3.select(tar).append("style").html(cssstyle);
+                //屏蔽右键
+                tar.oncontextmenu = function ()
+                {
+                    event.returnValue = false;
+                }
+                try
+                {
+                    d3.svg(this.svgurl).then(function (data)
+                    {
+                        var test = data.getElementsByTagName("svg")//取出画布中的内容
+                        var svg = d3.select("#" + tar.id).append("svg").attr("id", "svg" + tar.id);//创建画布
+
+                        //svg.select("rect").attr("width", width).attr("height", height);
+                        var circles_group = svg.append("g").attr("id", "g" + tar.id);//创建一个g元素用来包裹svg文件去掉画布标签的其他标签内容
+
+
+                        var svg2 = circles_group.append("svg")
+                    //    .attr("viewBox", "0 0 " + svgwidth + " " + svgheight + "")//这里是容器的宽高
+                            .attr("style", "display: inline; width: inherit; min-width: inherit; max-width: inherit; height: inherit; min-height: inherit; max-height: inherit;")
+                            .html(test["0"].innerHTML);
+                        var svgheight = circles_group.select("rect").attr("height");
+                        var svgwidth = circles_group.select("rect").attr("width");
+                        svg2
+                            .attr("id", "svgnesting")
+                           // .attr("onmousemove", "svgCursor(evt)")
+                            //      .attr("width", svgwidth)
+                            //.attr("hieght", svgheight)
+                        .attr("viewBox", "0 0 " + svgwidth + " " + svgheight + "");//这里是容器的宽高
+                        var padding = 0;//边距
+                        //这里将clientWidth，clientHeight的宽高设置成为div的宽高
+                        var clientHeight = tar.offsetHeight - padding;//  window.innerHeight - padding;
+                        var clientWidth = tar.offsetWidth - padding; //document.body.offsetWidth - padding; //window.innerWidth;
+                        console.log("不同浏览器下的宽高")
+                        console.log("clientWidth：" + clientWidth + ";clientHeight:" + clientHeight)
+                        svg
+                            .attr("preserveAspectRatio", "xMinYMin meet")
+                            .attr("width", clientWidth)
+                            .attr("hieght", clientHeight)
+                        //onmousemove = "svgCursor(evt)"
+                        //.attr("onmousemove", "svgCursor(evt)");
+                        .attr("viewBox", "0 0 " + svgwidth + " " + svgheight + "");//这里是容器的宽高
+
+                        d3svgTool.prototype.D3Svg = svg;//存下加载后的svg
+
+                        var zoom = d3.zoom()//定义缩放方法
+                          //  .scaleExtent([0.1, 5])
+                           .duration(750)
+                                         .on("zoom", function ()
+                                         { // zoom事件
+                                             circles_group.attr("transform", d3.zoomTransform(svg.node()));//缩放平移都是在操作g元素
+                                         })
+                        svg.call(zoom);
+                        var weightx2 = svgwidth * tar.clientHeight / svgheight;
+                        var scalex2 = (tar.clientWidth - weightx2) / 2;
+                        //svgtest
+                        var pnt = document.getElementById("svgnesting").createSVGPoint();
+                        pnt.x = scalex2;
+                        pnt.y = 0;
+                        var svgCTM = document.getElementById("svgnesting").getScreenCTM();
+                        var iPNT = pnt.matrixTransform(svgCTM.inverse());
+                        //console.log("加载时ipnt");
+                        //console.log(iPNT);
+                        //    return [(iPNT.x), (iPNT.y)];
+                        svg.call(zoom.transform, d3.zoomIdentity
+                                            .translate(iPNT.x, 0)
+                                            //.scale(1)
+                                            );
+
+                        //var scalex1 = (svgwidth - (svgheight * tar.clientWidth / tar.clientHeight)) / 2
+                        //var ScalingRatiox1 = tar.clientHeight / svgheight;
+                        //svg.call(zoom.transform, d3.zoomIdentity
+                        //                    .translate(scalex1, 0)
+                        //                    .scale(ScalingRatiox1));
+                        //比例高：
+                        var heightx1 = svgwidth * tar.clientHeight / tar.clientWidth;
+
+                        var weightx1 = svgwidth * heightx1 / svgheight;
+                        var scalex = (svgwidth - weightx1) / 2;
+                        var ScalingRatiox = heightx1 / svgheight;
+                        svg2.call(zoom.transform, d3.zoomIdentity
+                                                 .translate(scalex, 0)
+                                                 .scale(ScalingRatiox));
+                        window.onresize = function ()
+                        {
+                            var offsetWid = document.documentElement.clientWidth;//浏览器可见区域宽
+                            var offsetHei = document.documentElement.clientHeight;//浏览器可见区域高
+                            svg
+                           .attr("preserveAspectRatio", "xMinYMin meet")
+                           .attr("width", offsetWid)
+                           .attr("hieght", offsetHei)
+                            .attr("viewBox", "0 0 " + svgwidth + " " + svgheight + "");//这里是容器的宽高
+                            //ScalingRatio = offsetHei / svgheight;
+                            //scalex = ((offsetWid - (svgwidth * offsetHei / svgheight)) / 2);
+                            ////heightx1 = svgwidth * offsetHei / offsetWid;
+                            ////weightx1 = svgwidth * heightx1 / svgheight;
+                            ////scalex = (svgwidth - weightx1) / 2;
+                            ////ScalingRatio = heightx1 / svgheight;
+                            svg.call(zoom);
+                            var heightx1 = svgwidth * offsetHei / offsetWid;
+                            var weightx1 = svgwidth * heightx1 / svgheight;
+                            var scalex = (svgwidth - weightx1) / 2;
+                            var ScalingRatiox = heightx1 / svgheight;
+                            svg2.call(zoom.transform, d3.zoomIdentity
+                                            .translate(scalex, 0)
+                                            .scale(ScalingRatiox));
+                            //svg.call(zoom.transform, d3.zoomIdentity
+                            //                  .translate(scalex, 0)
+                            //                  .scale(ScalingRatio));
+
+
+                        }
+                        /////点击svg元素事件 （得封装成方法）
+                        //svg.selectAll("path").on("click", function (d, i) {
+
+                        //    d3.select(this).on("click", function () {
+                        //        console.log("点击事件")
+                        //        console.log(this);
+                        //        console.log("id:" + this.id);
+                        //        console.log(d3svgTool.prototype.LastElement)
+                        //        if (d3svgTool.prototype.LastElement != "") {
+                        //            d3.select(d3svgTool.prototype.LastElement).attr("class", "");
+                        //        }
+                        //        d3.select(this).attr("class", "svghover");
+                        //        d3svgTool.prototype.LastElement = this;
+                        //    })
+                        //})
+                    });//取到SVG Dom节点
+                } catch (e)
+                {
+                    console.log(e);
+                }
+
+            }
+            //选中颜色
+            //Id：传入容器ID值
+            //colorclass:传视选中元素的样式
+            d3svgTool.prototype.SelectionElementColor = function (id)
+            {
+                id = id.toString();
+                try
+                {
+                    if (id == "")
+                    {
+                        console.log("未选中构件")
+                        return;
+                    } else
+                    {
+                        d3svgTool.prototype.LastElementId = id;
+                        //console.log("坐标：");
+                        ////var x = document.getElementById(id).transform.animVal[0].matrix.e;
+                        ////var y = document.getElementById(id).transform.animVal[0].matrix.f;
+                        //console.log(d3.select(document.getElementById(id).getClientRects()));
+                        //console.log("[x,y]" + "[" + d3.select(document.getElementById(id)).attr("x") + "," + d3.select(document.getElementById(id)).attr("y") + "]");
+                        d3.select(document.getElementById(id)).attr("class", "svghover");
+                    }
+                } catch (e)
+                {
+                    console.log(e);
+                }
+
+            },
+
+            d3svgTool.prototype.LastElementId = "";
+            d3svgTool.prototype.LastElement = "";
+            d3svgTool.prototype.D3Svg = "";
+            d3svgTool.prototype.WhetherToAdd = false;
+            d3svgTool.prototype.svgType = "rect";
+            d3svgTool.prototype.svgcoordinate = "";
+
+            //tar：传入指定 ID 的第一个对象的引用
+            //evt：事件类型例如：click
+            //fn：回调方法
+            d3svgTool.prototype.ev = function (id, evt, fn)
+            {
+                var tar = document.getElementById(id);
+                tar.addEventListener(evt, function (ev)
+                {
+                    //监听单击事件 如果是坐标
+                    //console.log("屏幕坐标转svg坐标");
+                    //console.log(ev)
+                    var svgcoordinate = d3svgTool.prototype.svgcoordinate = d3svgTool.prototype.svgCursor(ev);
+
+                    //console.log(reportMouseCoordinates(null, ev.pageX, ev.pageY, d3.select("svg")));
+                    //console.log(GetScreenPosition(document.getElementById("svgtest")));
+                    //给tar注册监听事件
+                    var ev = ev || window.event;
+                    var srcname = ev.target.nodeName.toLocaleLowerCase();
+                    if (d3svgTool.prototype.LastElementId != "")
+                    {//如果上一次有选中颜色
+
+                        d3.select(document.getElementById(d3svgTool.prototype.LastElementId)).attr("class", "");
+                    }
+                    //console.log("ev");
+                    //console.log(ev);
+                    var srcElementId = ev.srcElement.id;//返回Id
+
+                    var resultarr = { "svgcoordinate": svgcoordinate, "srcElementId": srcElementId };//返回鼠标坐标
+                    //返回数组 第一个参数是坐标 第二个参数是选中id
+                    fn.call(resultarr);
+
+                });
+            }
+            d3svgTool.prototype.svgCursor = function (evt)
+            {
+                var pnt = document.getElementById("svgnesting").createSVGPoint();
+
+                pnt.x = evt.clientX;
+                pnt.y = evt.clientY;
+                var svgCTM = document.getElementById("svgnesting").getScreenCTM();
+                var iPNT = pnt.matrixTransform(svgCTM.inverse());
+                //console.log("ipnt");
+                //console.log(iPNT);
+                return [(iPNT.x), (iPNT.y)];
+                //SvgXValue.value = rnd2(iPNT.x)
+                //SvgYValue.value = rnd2(iPNT.y)
+            }
+            //图层
+            d3svgTool.prototype.layers = function ()
+            {
+
+
+
+                var arrIds = [];
+                var option = "<ul>";
+                console.log(this.Id);
+                d3.select("#svgnesting").selectAll("g").nodes().forEach(function (d)
+                {
+                    arrIds.push(d.id);
+                    option += "<li><input id=\"btn" + d.id + "\" type=\"button\" class=\"layers\" value=\"是否隐藏\" isshow=\"true\" onclick=\"ShowAndHide('" + d.id + "')\" />" + d.id + "</li>"
+                })
+                //d3.select(document.getElementById("test")).select("g").selectAll("g").nodes().forEach(function (d) {
+                //    arrIds.push(d.id);
+                //    option += "<li><input id=\"btn" + d.id + "\" type=\"button\" class=\"layers\" value=\"是否隐藏\" isshow=\"true\" onclick=\"ShowAndHide('" + d.id + "')\" />" + d.id + "</li>"
+                //})
+                option += "</ul>";
+                console.log(arrIds);
+                return option;
+            }
+            d3svgTool.prototype.Initialization = function ()
+            {
+                var tar = document.getElementById(this.Id);
+                var svgheight = d3.select(tar).select("g").select("rect").attr("height");
+                var svgwidth = d3.select(tar).select("g").select("rect").attr("width");
+                var padding = 0;//边距
+                var zoom = d3.zoom()
+                                  .on("zoom", function ()
+                                  { // zoom事件
+                                      d3.select(tar).select("g").attr("transform", d3.zoomTransform(d3.select(tar).select("svg").node()));//缩放平移都是在操作g元素
+
+                                  })
+
+                var clientHeight = tar.offsetHeight - padding;//  window.innerHeight - padding;
+                var clientWidth = tar.offsetWidth - padding;
+
+                ScalingRatio = clientHeight / svgheight;
+                scalex = ((clientWidth - (svgwidth * clientHeight / svgheight)) / 2);
+                d3.select(tar).select("svg")
+               .call(zoom.transform, d3.zoomIdentity
+                                 .translate(scalex, 0)
+                                 .scale(ScalingRatio));
+
+            }
+
+            window.d3svgTool = d3svgTool;
+        })(window)
+        var boolmeasure = false;
+        //将html坐标
+        document.onmousemove = htmCursor
+        //---'event' is the html event object---
+        function htmCursor(event)
+        {
+            var event = event || window.event;
+            myMouseX = event.clientX;
+            myMouseY = event.clientY;
+
+            htmlOffsetXValue.value = myMouseX + document.documentElement.scrollLeft;
+            htmlOffsetYValue.value = myMouseY + document.documentElement.scrollTop;
+        }
+
+
+        //调用插件实例222222
+        var d3test = new d3svgTool("test", "Model.svg");
+        d3test.load();
+        d3.select("#btnloadlayers").on("click", function ()
+        {
+            d3.select("#divlayers").html(d3test.layers());
+        })
+        //d3.select("svg").on("mousemove", function (evt) {
+        //    console.log("svg的鼠标移动")
+        //    svgCursor(evt);
+        //    showCTM(evt);
+        //});
+        //d3.select("svg").attr()
+
+
+        //输出svg的坐标
+        //---'evt' is the svg event object--
+        //function svgCursor(evt) {
+        //    var pnt = document.getElementById("svgnesting").createSVGPoint();
+        //    //console.log("evt");
+        //    //console.log(evt);
+        //    pnt.x = evt.clientX;
+        //    pnt.y = evt.clientY;
+        //    var svgCTM = document.getElementById("svgnesting").getScreenCTM();
+        //    var iPNT = pnt.matrixTransform(svgCTM.inverse());//返回逆矩阵
+        //    //multiply()
+        //    //console.log(svgCTM);
+        //    //console.log(iPNT);
+        //    SvgXValue.value = rnd2(iPNT.x)
+        //    SvgYValue.value = rnd2(iPNT.y)
+        //}
+
+        function rnd2(num)
+        {
+            return Math.round(num * 100) / 100
+        }
+        //---mouse click---
+        //function showCTM(evt) {
+        //    var target = evt.target
+        //    elemIdValue.value = target.id
+
+        //    var pnt = mySVG.createSVGPoint();
+        //    pnt.x = evt.clientX;
+        //    pnt.y = evt.clientY;
+
+
+        //    var SCTM = target.getScreenCTM();
+        //    var iPNT = pnt.matrixTransform(SCTM.inverse());
+
+
+        //    SCTMXValue.value = rnd2(iPNT.x)
+        //    SCTMYValue.value = rnd2(iPNT.y)
+        //}
+        function ShowAndHide(obj)
+        {
+            //console.log(obj.toString());
+            //var temp22 = d3.select(obj).attr("style");
+            //obj.attr("style", "display:none");
+            if (d3.select("#" + obj).attr("style") == null || d3.select("#" + obj).attr("style") == "")
+            {
+                d3.select("#" + obj).attr("style", "display:none");
+
+            } else
+            {
+                d3.select("#" + obj).attr("style", "");
+
+            }
+
+        }
+
+
+        function reportMouseCoordinates(svgElement, pageX, pageY, svgChild)
+        {
+            var point = document.getElementById("svgtest").createSVGPoint();
+            point.x = pageX;
+            point.y = pageY;
+            point = coordinateTransform(point, document.getElementById("svgtest"));
+            return point;
+        }
+        document.getElementById("test").onmousemove = function (evt)
+        {
+            var result = d3test.svgCursor(evt);
+            console.log("onmousemove");
+            SvgXValue.value = result[0];// rnd2(iPNT.x)
+            SvgYValue.value = result[1];// rnd2(iPNT.y
+
+        }
+        var Counter = 0;
+        var firstceliangdian = true;//测量第一点
+        d3test.ev("test", "click", function ()
+        {
+            try
+            {
+                //console.log("点击事件");
+                d3.select("#dragId").remove();
+
+                console.log(this);
+                var data = this;
+                var id = data["srcElementId"];
+                console.log(id);
+
+                //测量
+                if (boolmeasure)
+                {
+                    var _stroke_width = d3.select("g").select("svg").select("g").attr("stroke-width");
+                    //点击之后定义第一个点
+                    d3.select("#linemeasure").remove();
+                    d3.select("#linemeasureAC").remove();
+                    d3.select("#linemeasureBC").remove();
+                    d3.select("#cmeasureX2").remove();
+                    var svgcoordinate = data["svgcoordinate"];
+                    console.log(svgcoordinate)
+                    d3.select("#txtId").attr("value", "空白处坐标");
+                    d3.select("#txtmeasureX1").attr("value", svgcoordinate[0]);
+                    d3.select("#txtmeasureY1").attr("value", svgcoordinate[1]);
+                    if (document.getElementById("gmeasure") == null)
+                    {
+                        d3.select("g").select("svg").append("g").attr("id", "gmeasure");
+                    }
+                    console.log(document.getElementById("cmeasureX1"));
+
+                    if (firstceliangdian)
+                    {
+                        console.log("初始点不存在")
+                        d3.select("#cmeasureX1").remove();
+                        d3.select("g").select("svg").select("#gmeasure").append("circle").attr("id", "cmeasureX1")
+                                         .attr("fill", "blue").attr("r", parseFloat(_stroke_width, 0) * 2)
+                                         .attr("cx", svgcoordinate[0])
+                                         .attr("cy", svgcoordinate[1]);
+                        d3.select("g").select("svg").select("#gmeasure").append("line").attr("id", "linemeasure")
+                         .attr("style", "stroke:rgb(99,99,99);stroke-width:2");
+
+                        //d3test.ev("test", "mousemove", function () {
+
+                        //    var data = this;
+                        //    var svgcoordinate = data["svgcoordinate"];
+                        //    d3.select("#linemeasure")
+                        //    .attr("x1", d3.select("#txtmeasureX1").attr("value"))
+                        //    .attr("y1", d3.select("#txtmeasureY1").attr("value"))
+                        //    .attr("x2", svgcoordinate[0])
+                        //    .attr("y2", svgcoordinate[1]);
+                        //});
+                        firstceliangdian = false;
+                    }
+                    else
+                    {
+                        console.log("存在初始点");
+                        d3.select("#linemeasure").remove();
+                        d3.select("#linemeasureAC").remove();
+                        d3.select("#linemeasureBC").remove();
+                        d3.select("#cmeasureX2").remove();
+
+
+
+                        d3.select("#txtmeasureX2").attr("value", svgcoordinate[0]);
+                        d3.select("#txtmeasureY2").attr("value", svgcoordinate[1]);
+                        d3.select("g").select("svg").select("#gmeasure").append("circle").attr("id", "cmeasureX2")
+                               .attr("fill", "blue").attr("r", parseFloat(_stroke_width, 0) * 2)
+                               .attr("cx", svgcoordinate[0])
+                               .attr("cy", svgcoordinate[1]);
+                        d3.select("g").select("svg").select("#gmeasure").append("line").attr("id", "linemeasure")
+                       .attr("style", "stroke:rgb(0,0,0);stroke-width:" + _stroke_width)
+                       .attr("x1", d3.select("#cmeasureX1").attr("cx"))
+                       .attr("y1", d3.select("#cmeasureX1").attr("cy"))
+                       .attr("x2", svgcoordinate[0])
+                       .attr("y2", svgcoordinate[1]);
+
+                        //算距离  这里设置一个c点
+                        //c点坐标【cmeasureX1 .x和cmeasureX2.y】
+                        var ac = Math.abs(parseFloat(d3.select("#cmeasureX2").attr("cx"), 0) - parseFloat(d3.select("#cmeasureX1").attr("cx"), 0));
+                        var bc = Math.abs(parseFloat(d3.select("#cmeasureX1").attr("cy"), 0) - parseFloat(d3.select("#cmeasureX2").attr("cy"), 0));
+                        var ab = Math.sqrt(Math.pow(ac, 2) + Math.pow(bc, 2))
+                        txtjuli.value = ab;
+                        ///这里写辅助线
+                        d3.select("g").select("svg").select("#gmeasure").append("line").attr("id", "linemeasureAC")
+                           .attr("style", "stroke:rgb(255, 0, 0);stroke-width:" + _stroke_width)
+                           .attr("stroke-dasharray", _stroke_width + "," + _stroke_width)
+                           .attr("x1", d3.select("#cmeasureX1").attr("cx"))
+                           .attr("y1", d3.select("#cmeasureX1").attr("cy"))
+                           .attr("x2", d3.select("#cmeasureX2").attr("cx"))
+                           .attr("y2", d3.select("#cmeasureX1").attr("cy"));
+                        d3.select("g").select("svg").select("#gmeasure").append("line").attr("id", "linemeasureBC")
+                       .attr("style", "stroke:rgb(50, 205, 50);stroke-width:" + _stroke_width)
+                       .attr("stroke-dasharray", _stroke_width + "," + _stroke_width)
+                       .attr("x1", d3.select("#cmeasureX2").attr("cx"))
+                       .attr("y1", d3.select("#cmeasureX2").attr("cy"))
+                       .attr("x2", d3.select("#cmeasureX2").attr("cx"))
+                       .attr("y2", d3.select("#cmeasureX1").attr("cy"));
+                        firstceliangdian = true;
+                    }
+
+                    //d3test.ev("test", "mousedown", function () {
+                    //    var data = this;
+                    //    var svgcoordinate = data["svgcoordinate"];
+                    //    if (firstceliangdian) {
+                    //        d3.select("g").select("svg").select("#gmeasure").append("circle").attr("id", "cmeasureX2")
+                    //            .attr("fill", "blue").attr("r", 50)
+                    //            .attr("cx", svgcoordinate[0])
+                    //            .attr("cy", svgcoordinate[1]);
+                    //    }
+                    //})
+
+                    //d3.select("g").select("svg").append("circle").attr("id", "txtmeasureX2")
+                    //.attr("fill", "yellow").attr("r", 50)
+                    //.attr("x", svgcoordinate[0] + 100)
+                    //.attr("y", svgcoordinate[1] + 100);
+                    //d3.select("#txtmeasureX2").call(d3.drag()
+                    //                 .on("start", function (d) {
+                    //                     d3.select("g").select("svg").append("line").attr("id", "linemeasure")
+                    //                     .attr("style", "stroke:rgb(99,99,99);stroke-width:2");
+                    //                 })
+                    //                 .on("drag", function (d) {
+                    //                     //<line x1="0" y1="0" x2="300" y2="300"
+                    //                     //style="stroke:rgb(99,99,99);stroke-width:2"/>
+                    //                     d3.select("#linemeasure")
+                    //                     .attr("x1", svgcoordinate[0])
+                    //                     .attr("y1", svgcoordinate[1])
+                    //                     .attr("x2", d3.event.x)
+                    //                     .attr("y2", d3.event.y);
+                    //                 })
+                    //                 .on("end", function (d) {
+                    //                     d3.select("#txtmeasureX2").attr("x", d3.event.x).attr("y", d3.event.y);
+                    //                 }));
+
+                } else
+                {
+
+
+                    d3test.SelectionElementColor(id);
+                    //获取下所选中元素的坐标Id
+                    //console.log(d3.select(document.getElementById(id)).attr("d"));
+                    if (id != "")
+                    {//选中已有元素
+                        d3.select("#txtId").attr("value", id);
+                        var svgcoordinate = data["svgcoordinate"];
+                        d3.select("#txtId").attr("value", id);
+                        d3.select("#txtX").attr("value", svgcoordinate[0]);
+                        d3.select("#txtY").attr("value", svgcoordinate[1]);
+
+                        if (d3.select("#" + id).attr("isdrag"))
+                        {//打上去的标签可以拖动
+                            //创建一个拖拽点（小矩形）
+                            var x = 0;
+                            var y = 0;
+                            var dragwidth1 = 0;
+                            var dragheight1 = 0;
+                            if (d3.select("#" + id).attr("type") == "circle")
+                            {//如果选中的圆或椭圆
+                                x = parseInt(d3.select("#" + id).attr("cx"), 0) + parseInt(d3.select("#" + id).attr("r"), 0);
+                                y = parseInt(d3.select("#" + id).attr("cy"), 0) + parseInt(d3.select("#" + id).attr("r"), 0);
+                                dragwidth1 = parseInt(d3.select("#" + id).attr("r"), 0)
+                                dragheight1 = parseInt(d3.select("#" + id).attr("r"), 0)
+                            } else if (d3.select("#" + id).attr("type") == "rect" || d3.select("#" + id).attr("type") == "image")
+                            {
+                                x = parseInt(d3.select("#" + id).attr("x"), 0) + parseInt(d3.select("#" + id).attr("width"), 0);
+                                y = parseInt(d3.select("#" + id).attr("y"), 0) + parseInt(d3.select("#" + id).attr("height"), 0);
+                                dragwidth1 = parseInt(d3.select("#" + id).attr("x"), 0)
+                                dragheight1 = parseInt(d3.select("#" + id).attr("y"), 0)
+                            }
+                            d3.select("g").select("svg").select("#gtempLabel").append("rect").attr("id", "dragId")
+                                    .attr("width", 50).attr("height", 50).attr("fill", "black")
+                                    .attr("x", function ()
+                                    {
+                                        return x;
+                                    })
+                                    .attr("y", function ()
+                                    {
+                                        return y;
+                                    });
+
+                            d3.select("#dragId").call(d3.drag()
+                                .on("start", function (d)
+                                {
+
+                                })
+                                .on("drag", function (d)
+                                {
+                                    var dragwidth = d3.event.x - dragwidth1;
+                                    var dragheight = d3.event.y - dragheight1;
+
+                                    d3.select("#" + id).attr("width", dragwidth);
+                                    d3.select("#" + id).attr("height", dragheight);
+
+                                    d3.select("#dragId")
+                                          .attr("x", function ()
+                                          {
+                                              return (parseInt(d3.select("#" + id).attr("x"), 0) + parseInt(d3.select("#" + id).attr("width"), 0));
+                                          })
+                                          .attr("y", function ()
+                                          {
+                                              return (parseInt(d3.select("#" + id).attr("y"), 0) + parseInt(d3.select("#" + id).attr("height"), 0));
+                                          });
+
+                                })
+                                .on("end", function (d)
+                                {
+                                    var dragwidth = d3.event.x - dragwidth1;
+                                    var dragheight = d3.event.y - dragheight1;
+                                    d3.select("#" + id).attr("width", dragwidth);
+                                    d3.select("#" + id).attr("height", dragheight);
+                                    d3.select("#dragId")
+           //.attr("width", 50).attr("height", 50).attr("fill", "black")
+           .attr("x", function ()
+           {
+               return (parseInt(d3.select("#" + id).attr("x"), 0) + parseInt(d3.select("#" + id).attr("width"), 0));
+           })
+           .attr("y", function ()
+           {
+               return (parseInt(d3.select("#" + id).attr("y"), 0) + parseInt(d3.select("#" + id).attr("height"), 0));
+           });
+                                })
+                                )
+
+                            d3.select("#" + id).call(d3.drag()
+                                          .on("start", dragstarted)
+                                          .on("drag", dragged)
+                                          .on("end", dragended));
+                        }
+
+                    }
+                    else
+                    {//空白处点击
+                        var svgcoordinate = data["svgcoordinate"];
+                        d3.select("#txtId").attr("value", "空白处坐标");
+                        d3.select("#txtX").attr("value", svgcoordinate[0]);
+                        d3.select("#txtY").attr("value", svgcoordinate[1]);
+                    }
+                }
+
+                ///比如在此节点上插入一个正方形
+                //d3.select("g").append("rect").attr("width", 10).attr("height", 10).attr("fill", "blue").attr("x", x).attr("y", y)
+                //.attr("id", "rectby" + id);
+
+
+            } catch (e)
+            {
+                console.log(e);
+            }
+        });
+        //d3.select("#btnSave").on("click", function () {
+        //    d3.select("#" + d3.select("#txtId").attr("value"))
+        //    .attr("x", d3.select("#txtX").attr("value"))
+        //    .attr("y", d3.select("#txtY").attr("value"))
+        //    .attr("width", d3.select("#txtwidth").attr("value"))
+        //    .attr("hieght", d3.select("#txthieght").attr("value"))
+        //})
+        //插入圆
+        d3.select("#btninsertcircle").on("click", function ()
+        {
+            if (document.getElementById("gtempLabel") == null)
+            {
+                d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            }
+            d3.select("g").select("svg").select("#gtempLabel")
+            //    .append("g")
+            //.attr("id", "gtempLabel")
+            .append("circle")
+            .attr("r", 200)
+            .attr("cx", d3.select("#txtX").attr("value"))
+            .attr("cy", d3.select("#txtY").attr("value"))
+            .attr("type", "circle")
+            .attr("isdrag", true)
+            .attr("id", "Labelcircle" + document.getElementById("txtId").value + Counter);
+            Counter += 1;
+        });
+        //插入矩形
+        d3.select("#btninsertrectangle").on("click", function ()
+        {
+            if (document.getElementById("gtempLabel") == null)
+            {
+                d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            }
+
+            d3.select("g").select("svg").select("#gtempLabel")
+          .append("rect")
+          .attr("width", 500)
+          .attr("height", 500)
+                .attr("stroke", "yellow")
+         .attr("x", d3.select("#txtX").attr("value"))
+         .attr("y", d3.select("#txtY").attr("value"))
+         .attr("type", "rect")
+         .attr("isdrag", true)
+         .attr("id", "Labelrect" + document.getElementById("txtId").value + Counter);
+            //d3.select("#txtsetwidth").attr("value", 15);
+            //d3.select("#txtsetheight").attr("value", 10);
+            Counter += 1;
+
+        });
+        d3.select("#btninserttext").on("click", function ()
+        {
+            if (d3.select("#txtInsertText").attr("value") == "" || d3.select("#txtX").attr("value") == "" || d3.select("#txtY").attr("value") == "")
+            {
+                console.log("插入文字为空或未选中元素");
+                document.getElementById("txtInsertText").onfocus;
+                return false;
+            }
+            d3.select("g").select("svg").select("#gtempLabel")
+                .append("text")
+                .text(document.getElementById("txtInsertText").value)
+                .attr("x", d3.select("#txtX").attr("value"))
+                .attr("y", d3.select("#txtY").attr("value"))
+                .attr("isdrag", true)
+                .attr("type", "text")
+                .attr("id", "Labeltext" + document.getElementById("txtId").value + Counter);
+            Counter += 1;
+        });
+        //插入图片
+        d3.select("#btninsertimage").on("click", function ()
+        {
+            //if (document.getElementById("fileimage").value == "") {
+            //    console.log("未选择图片不能插入图片")
+            //    return;
+            //}
+            if (document.getElementById("gtempLabel") == null)
+            {
+                d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            }
+            d3.select("g").select("svg").select("#gtempLabel")
+           .append("image")
+           .attr("width", 500)
+           .attr("height", 500)
+           .attr("x", d3.select("#txtX").attr("value"))
+           .attr("y", d3.select("#txtY").attr("value"))
+           .attr("xlink:href", "一切都是世界的错.png")
+           .attr("isdrag", true)
+           .attr("id", "labelImage" + document.getElementById("txtId").value + Counter)
+           .attr("type", "image");
+            Counter += 1;
+            //<image xlink:href="https://ss0.bdstatic.com/5aV1bjqh_Q23odCf/static/superman/img/logo/bd_logo1_31bdc765.png" width="660" height="342"></image>
+        })
+        //插入椭圆
+        d3.select("#btninsertellipse").on("click", function ()
+        {
+            if (document.getElementById("gtempLabel") == null)
+            {
+                d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            }
+            d3.select("g").select("svg").select("#gtempLabel")
+             .append("ellipse")
+             .attr("rx", 800)
+             .attr("ry", 500)
+             .attr("cx", d3.select("#txtX").attr("value"))
+             .attr("cy", d3.select("#txtY").attr("value"))
+             .attr("isdrag", true)
+             .attr("id", "labelellipse" + document.getElementById("txtId").value + Counter)
+             .attr("type", "ellipse");
+            Counter += 1;
+        });
+        d3.select("#btninsertg").on("click", function ()
+        {
+            d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            d3.select("#btninsertg").attr("disabled", "disabled");
+        });
+        function dragstarted(d)
+        {
+            console.log("拖拽开始");
+            console.log(this);
+
+            //            .attr("")
+
+            console.log(d);
+            // d3.select(this).raise().classed("active", true);
+        }
+
+        function dragged(d)
+        {
+            ///在此控制是否改添加的图形处于选中状态
+
+
+            //d3.select(this).attr("transform", "translate(" + tx + "," + ty + ") scale(" + 1 + ")");
+            if (d3.select(this).attr("type") == "circle")
+            {
+                d3.select(this).attr("cx", d3.event.x).attr("cy", d3.event.y);
+                d3.select("#txtsetX").attr("value", d3.event.x);
+                d3.select("#txtsetY").attr("value", d3.event.y);
+            } else
+            {
+                d3.select(this).attr("x", d3.event.x).attr("y", d3.event.y);
+                d3.select("#txtsetX").attr("value", d3.event.x);
+                d3.select("#txtsetY").attr("value", d3.event.y);
+            }
+
+            var widthx = 0;
+            var heighty = 0;
+            if (d3.select(this).attr("type") == "circle")
+            {//如果选中的矩形
+                widthx = parseInt(d3.select(this).attr("cx"), 0) + parseInt(d3.select(this).attr("r"), 0);
+                heighty = parseInt(d3.select(this).attr("cy"), 0) + parseInt(d3.select(this).attr("r"), 0);
+            } else if (d3.select(this).attr("type") == "rect" || d3.select(this).attr("type") == "image")
+            {
+                widthx = parseInt(d3.select(this).attr("x"), 0) + parseInt(d3.select(this).attr("width"), 0);
+                heighty = parseInt(d3.select(this).attr("y"), 0) + parseInt(d3.select(this).attr("height"), 0);
+            }
+            d3.select("#dragId")
+//.attr("width", 50).attr("height", 50).attr("fill", "black")
+.attr("x", function ()
+{
+    return widthx;
+    //(parseInt(d3.select("#" + id).attr("x"), 0) + parseInt(d3.select("#" + id).attr("width"), 0));
+})
+.attr("y", function ()
+{
+    return heighty;
+    //(parseInt(d3.select("#" + id).attr("y"), 0) + parseInt(d3.select("#" + id).attr("height"), 0));
+});
+
+            //d3.select(this).select("circle").attr("cx", d.x = d3.event.x).attr("cy", d.y = d3.event.y);
+            //cell = cell.data(voronoi.polygons(circles)).attr("d", renderCell);
+        }
+
+        function dragended(d, i)
+        {
+            console.log("拖拽结束");
+            d3.select(this).attr("x", d3.event.x).attr("y", d3.event.y);
+            // d3.select("#dragId").remove();
+            //d3.select(this).classed("active", false);
+        }
+        function TempLabelList()
+        {
+            var arr = [];
+            d3.select("svg").select("gtempLabel").nodes().forEach(function (d)
+            {
+                arr.push(d.id);
+            });
+            console.log("TempLabelList");
+            console.log(arr);
+        }
+
+        d3.select("#btnSaveText").on("click", function ()
+        {
+            console.log("设置属性")
+            try
+            {
+                //console.log(document.getElementById(d3.select("#txtId").attr("value")));
+                if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "rect")
+                {//设置长宽
+
+                    d3.select("#" + document.getElementById("txtId").value).attr("width", document.getElementById("txtsetwidth").value);
+                    d3.select("#" + document.getElementById("txtId").value).attr("height", document.getElementById("txtsetheight").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "image")
+                {//设置长宽
+
+                    d3.select("#" + document.getElementById("txtId").value).attr("width", document.getElementById("txtsetwidth").value);
+                    d3.select("#" + document.getElementById("txtId").value).attr("height", document.getElementById("txtsetheight").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "circle")
+                {//设置半径
+                    d3.select("#" + document.getElementById("txtId").value).attr("r", document.getElementById("txtradius").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "text")
+                {//设置字体大小
+                    d3.select("#" + document.getElementById("txtId").value).attr("style", "font-size:" + document.getElementById("txtFontSize").value);
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        })
+        document.getElementById("btnInitialization").onclick = function ()
+        {
+            d3test.Initialization();
+        }
+        document.getElementById("btnmeasure").onclick = function ()
+        {
+            if (boolmeasure)
+            {
+                boolmeasure = false;
+                alert("测量关闭")
+            } else
+            { boolmeasure = true; alert("测量开启") }
+
+
+        }
+        //鼠标移动上去有个浮窗，然后再浮窗中再次设置这个标签的详细信息
+
+        //返回空白处的坐标
+        //屏幕坐标点减去SVG的起始坐标
+    </script>
+
+</body>
+</html>

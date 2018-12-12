@@ -65,6 +65,12 @@
     <Content Include="D3Demo10-封装\Model.svg" />
     <Content Include="D3Demo10-封装\一切都是世界的错.png" />
     <Content Include="D3Demo10-封装\反转颜色.html" />
+    <Content Include="D3Demo9-测量\d3.min.js" />
+    <Content Include="D3Demo9-测量\D3Tool.js" />
+    <Content Include="D3Demo9-测量\Dragging Transformed SVG Elements.html" />
+    <Content Include="D3Demo9-测量\index.html" />
+    <Content Include="D3Demo9-测量\Model.svg" />
+    <Content Include="D3Demo9-测量\一切都是世界的错.png" />
     <Content Include="D3Tool9 - 复制\222222.svg" />
     <Content Include="D3Tool9 - 复制\d3.min.js" />
     <Content Include="D3Tool9 - 复制\index.html" />

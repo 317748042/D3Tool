@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head> 
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=utf-8" />
+<title>Dragging Transformed SVG Elements</title>
+<style type="text/css" media="screen">
+	html, body {
+		background:#eee; margin:0;
+		user-select:none; -moz-user-select:none; -webkit-user-select:none;
+	}
+	p { margin:0.5em; text-align:center }
+	svg {
+		position:absolute; top:5%; left:5%; width:90%; height:90%;
+		background:#fff; border:1px solid #ccc
+	}
+	svg rect { stroke:#333 }
+	svg .drag { cursor:move }
+	svg .sizer { opacity:0.3; fill:#ff0; stroke:#630;}
+	#footer {
+		position:absolute; bottom:0.5em; margin-bottom:0;
+		width:40em; margin-left:-20em; left:50%; color:#666;
+		font-style:italic; font-size:85%
+	}
+	#dragcatch { position:absolute; left:0; right:0; top:0; bottom:0; z-index:-1 }
+</style>
+<style type="text/css" adt="123" /><script>//console.log('a')
+</script><script>//remove 17173 video ad
+doAdblock();
+function doAdblock(){
+    (function() {
+        function A() {}
+        A.prototype = {
+            rules: {
+                '17173_in':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFile(Customer)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_in_20150522.swf"
+                },
+                '17173_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFileFirstpage\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_out_20150522.swf"
+                },
+                '17173_live':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream(_firstpage)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_stream_20150522.swf"
+                },
+                '17173_live_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream_(custom)?Out\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173.out.Live.swf"
+                }
+            },
+            _done: null,
+            get done() {
+                if(!this._done) {
+                    this._done = new Array();
+                }
+                return this._done;
+            },
+            addAnimations: function() {
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = 'object,embed{\
+                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;\
+                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;\
+                -o-animation-duration:.001s;-o-animation-name:playerInserted;\
+                animation-duration:.001s;animation-name:playerInserted;}\
+                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}';
+                document.getElementsByTagName('head')[0].appendChild(style);
+            },
+            animationsHandler: function(e) {
+                if(e.animationName === 'playerInserted') {
+                    this.replace(e.target);
+                }
+            },
+            replace: function(elem) {
+                if(this.done.indexOf(elem) != -1) return;
+                this.done.push(elem);
+                var player = elem.data || elem.src;
+                if(!player) return;
+                var i, find, replace = false;
+                for(i in this.rules) {
+                    find = this.rules[i]['find'];
+                    if(find.test(player)) {
+                        replace = this.rules[i]['replace'];
+                        if('function' === typeof this.rules[i]['preHandle']) {
+                            this.rules[i]['preHandle'].bind(this, elem, find, replace, player)();
+                        }else{
+                            this.reallyReplace.bind(this, elem, find, replace)();
+                        }
+                        break;
+                    }
+                }
+            },
+            reallyReplace: function(elem, find, replace) {
+                elem.data &amp;&amp; (elem.data = elem.data.replace(find, replace)) || elem.src &amp;&amp; ((elem.src = elem.src.replace(find, replace)) &amp;&amp; (elem.style.display = 'block'));
+                var b = elem.querySelector("param[name='movie']");
+                this.reloadPlugin(elem);
+            },
+            reloadPlugin: function(elem) {
+                var nextSibling = elem.nextSibling;
+                var parentNode = elem.parentNode;
+                parentNode.removeChild(elem);
+                var newElem = elem.cloneNode(true);
+                this.done.push(newElem);
+                if(nextSibling) {
+                    parentNode.insertBefore(newElem, nextSibling);
+                } else {
+                    parentNode.appendChild(newElem);
+                }
+            },
+            init: function() {
+                var handler = this.animationsHandler.bind(this);
+                document.body.addEventListener('webkitAnimationStart', handler, false);
+                document.body.addEventListener('msAnimationStart', handler, false);
+                document.body.addEventListener('oAnimationStart', handler, false);
+                document.body.addEventListener('animationstart', handler, false);
+                this.addAnimations();
+            }
+        };
+        new A().init();
+    })();
+}
+//remove baidu search ad
+if(document.URL.indexOf('www.baidu.com') &gt;= 0){
+    if(document &amp;&amp; document.getElementsByTagName &amp;&amp; document.getElementById &amp;&amp; document.body){
+        var aa = function(){
+            var all = document.body.querySelectorAll("#content_left div,#content_left table");
+            for(var i = 0; i &lt; all.length; i++){
+                if(/display:\s?(table|block)\s!important/.test(all[i].getAttribute("style"))){all[i].style.display= "none";all[i].style.visibility='hidden';}
+            }
+            all = document.body.querySelectorAll('.result.c-container[id="1"]');
+            //if(all.length == 1) return;
+            for(var i = 0; i &lt; all.length; i++){
+                if(all[i].innerHTML &amp;&amp; all[i].innerHTML.indexOf('广告')&gt;-1){
+                    all[i].style.display= "none";all[i].style.visibility='hidden';
+                }
+            }
+        }
+        aa();
+        document.getElementById('wrapper_wrapper').addEventListener('DOMSubtreeModified',aa)
+    };
+}
+//remove sohu video ad
+if (document.URL.indexOf("tv.sohu.com") &gt;= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+//remove 56.com video ad
+if (document.URL.indexOf("56.com") &gt;= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+//fore iqiyi enable html5 player function
+if (document.URL.indexOf("iqiyi.com") &gt;= 0){
+    if (document.cookie.indexOf("player_forcedType=h5_VOD")==-1){
+        document.cookie='player_forcedType=h5_VOD'
+        if(localStorage.reloadTime &amp;&amp; Date.now() - parseInt(localStorage.reloadTime)&lt;60000){
+            console.log('no reload')
+        }else{
+            location.reload()
+            localStorage.reloadTime = Date.now();
+        }
+    }
+}
+</script><style type="text/css">object,embed{                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;                -o-animation-duration:.001s;-o-animation-name:playerInserted;                animation-duration:.001s;animation-name:playerInserted;}                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}</style></head><body>
+<p>
+	Showing how to handle dragging of points inside a transformation hierarchy.
+	Written to support <a href="http://stackoverflow.com/questions/4850821/svg-coordinates-with-transform-matrix">this Stack Overflow answer</a>.
+</p>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 100" version="1.1" baseProfile="full">
+	<g transform="scale(1.2,0.8)">
+		
+		<rect class="drag resize" x="5" y="5" width="49.03293228149414" height="29.21187973022461" fill="#c66" />
+	<rect transform="translate(50,20) rotate(30)" class="drag resize" x="22.705116271972656" y="-29.155040740966797" width="59.37681579589844" height="40.149362564086914" fill="#69c" /></g>
+<circle class="drag sizer" cx="64.83952331542969" cy="27.369504928588867" r="5" /><circle class="drag sizer" cx="138.70545959472656" cy="56.44986343383789" r="5" /></svg>
+<p id="footer">
+	Copyright © 2011 <a href="mailto:!@phrogz.net">Gavin Kistner</a>. 
+	Comments/criticisms welcome.
+</p>
+<script type="text/javascript"><![CDATA[
+	// http://jointjs.com/blog/get-transform-to-element-polyfill.html
+	SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(toElement) {
+		return toElement.getScreenCTM().inverse().multiply(this.getScreenCTM());
+	};
+
+	var svg   = document.getElementsByTagName('svg')[0];
+	var svgNS = svg.getAttribute('xmlns');
+	var pt    = svg.createSVGPoint();
+
+  function createOn(root,name,prop){
+    var el = document.createElementNS(svgNS,name);
+    for (var a in prop) if (prop.hasOwnProperty(a)) el.setAttribute(a,prop[a]);
+    return root.appendChild(el);
+  }
+
+	function rectCorner(rect){
+		pt.x = rect.x.animVal.value + rect.width.animVal.value;
+		pt.y = rect.y.animVal.value + rect.height.animVal.value;
+		return pt.matrixTransform(rect.getTransformToElement(svg));
+	}
+	
+	function pointIn(el,x,y){
+		pt.x = x; pt.y = y;
+		return pt.matrixTransform(el.getTransformToElement(svg).inverse());
+	}
+	
+	function cursorPoint(evt){
+		pt.x = evt.clientX; pt.y = evt.clientY;
+		return pt.matrixTransform(svg.getScreenCTM().inverse());
+	}
+		
+	// Make all rects resizable before drag, so the drag handles become drag
+	for (var a=svg.querySelectorAll('rect.resize'),i=0,len=a.length;i<len;++i){
+		(function(rect){
+			var dot = createOn(svg,'circle',{'class':'drag sizer',cx:0,cy:0,r:5});
+			var moveDotToRect = function(){
+				var corner = rectCorner(rect);
+				dot.setAttribute('cx',corner.x);
+				dot.setAttribute('cy',corner.y);
+			}
+			moveDotToRect();
+			rect.addEventListener('dragged',moveDotToRect,false);
+			dot.addEventListener('dragged',function(){
+				var rectXY = pointIn(rect,dot.cx.animVal.value,dot.cy.animVal.value);
+				var w = Math.max( rectXY.x-rect.x.animVal.value, 1 );
+				var h = Math.max( rectXY.y-rect.y.animVal.value, 1 );
+				rect.setAttribute('width', w);
+				rect.setAttribute('height',h);
+			},false);
+		})(a[i]);
+	}
+	
+	for (var a=svg.querySelectorAll('.drag'),i=0,len=a.length;i<len;++i){
+		(function(el){
+			var onmove; // make inner closure available for unregistration
+			el.addEventListener('mousedown',function(e){
+				el.parentNode.appendChild(el); // move to top
+				var x = el.tagName=='circle' ? 'cx' : 'x';
+				var y = el.tagName=='circle' ? 'cy' : 'y';
+				var mouseStart   = cursorPoint(e);
+				var elementStart = { x:el[x].animVal.value, y:el[y].animVal.value };
+				onmove = function(e){
+					var current = cursorPoint(e);
+					pt.x = current.x - mouseStart.x;
+					pt.y = current.y - mouseStart.y;
+					var m = el.getTransformToElement(svg).inverse();
+					m.e = m.f = 0;
+					pt = pt.matrixTransform(m);
+					el.setAttribute(x,elementStart.x+pt.x);
+					el.setAttribute(y,elementStart.y+pt.y);
+					var dragEvent = document.createEvent("Event");
+					dragEvent.initEvent("dragged", true, true);
+					el.dispatchEvent(dragEvent);
+				};
+				document.body.addEventListener('mousemove',onmove,false);
+			},false);
+			document.body.addEventListener('mouseup',function(){
+				document.body.removeEventListener('mousemove',onmove,false);
+			},false);
+		})(a[i]);
+	}
+]]></script>
+<div id="dragcatch" />
+</body></html>
