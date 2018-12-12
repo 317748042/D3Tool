@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+</head>
+<body style="overflow: hidden;">
+
+    <div id="test" style="float:left"></div>
+    <div style="position:absolute;width:400px; height:100%; overflow-y:scroll; background-color:beige;float:left; opacity:0.7;">
+        <div>
+            <button id="btnInitialization">初始化</button>
+            <button id="btnloadlayers">展开图层信息</button>
+            <button id="btnmeasure">测量模式</button>
+            <button id="btnselects">选择模式</button>
+            <button id="btnAddLabel">打标签模式</button>
+            <!--<button id="btndrag">标签拖拽模式</button>-->
+            <p></p>
+            <input id="txtColor" type="text" />
+            <button id="btnSetBackgroundColor">设置背景色</button>
+            <p>图层信息</p>
+            <div id="divlayers"></div>
+            <p>插入元素</p>
+            <!--<input id="btninsertg" type="button" value="先插入组元素，后面添加的元素全都包含在创建的组中" />-->
+            <p></p>
+            <input id="btninsertrectangle" type="button" value="插入矩形" />
+            <input id="btninsertcircle" type="button" value="插入圆" />
+            <input id="btninsertellipse" type="button" value="插入椭圆" />
+            <p>
+                <!--<input id="fileimage" type="file" />-->
+                <input id="btninsertimage" type="button" value="插入图片" />
+            </p>
+            <p>
+                要插入的文字<input id="txtInsertText" type="text" />
+                <input id="btninserttext" type="button" value="插入文字" />
+            </p>
+
+        </div>
+        <p>
+            属性
+        </p>
+        <div>
+            <p>所选中元素Id</p>
+            <ul>
+                <li>Id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;：<input id="txtId" type="text" /></li>
+                <li></li>
+                <li>插入的形状会在这个坐标</li>
+                <li>坐标X：<input id="txtX" type="text" /></li>
+                <li>坐标Y：<input id="txtY" type="text" /></li>
+                <li></li>
+                <li>鼠标在html上的坐标</li>
+                <li>HtmlX<input id="htmlOffsetXValue" type="text" /></li>
+                <li>HtmlY<input id="htmlOffsetYValue" type="text" /></li>
+                <li>鼠标在svg上的坐标</li>
+                <li>SVGX<input id="SvgXValue" type="text" /></li>
+                <li>SVGY<input id="SvgYValue" type="text" /></li>
+                <!--<li>  <input id="btnSave" type="button" value="确定" /></li>-->
+            </ul>
+            <p>元素信息设置</p>
+            <ul>
+                <li>font-size:<input id="txtFontSize" type="text" /></li>
+                <li>x:<input id="txtsetX" type="text" /></li>
+                <li>y:<input id="txtsetY" type="text" /></li>
+                <li>width：<input id="txtsetwidth" type="text" /></li>
+                <li>hieght：<input id="txtsetheight" type="text" /></li>
+                <li>半径:<input id="txtradius" type="text" /></li>
+                <li><input id="btnSaveText" type="button" value="设置" /></li>
+            </ul>
+            <p>测量坐标</p>
+            <ul>
+                <li>第一点的X坐标<input id="txtmeasureX1" type="text" /></li>
+                <li>第一点的Y坐标<input id="txtmeasureY1" type="text" /></li>
+                <li>第二点的X坐标<input id="txtmeasureX2" type="text" /></li>
+                <li>第二点的Y坐标<input id="txtmeasureY2" type="text" /></li>
+                <li>两点之间的距离<input id="txtjuli" type="text" /></li>
+            </ul>
+        </div>
+
+    </div>
+    <script src="d3.min.js"></script>
+
+    <script src="../D3Demo10-封装/D3Tool.js"></script>
+    <script>
+
+        var boolmeasure = false;
+        //将html坐标
+        document.onmousemove = htmCursor
+        //---'event' is the html event object---
+        function htmCursor(event)
+        {
+            var event = event || window.event;
+            myMouseX = event.clientX;
+            myMouseY = event.clientY;
+
+            htmlOffsetXValue.value = myMouseX + document.documentElement.scrollLeft;
+            htmlOffsetYValue.value = myMouseY + document.documentElement.scrollTop;
+        }
+
+
+        //调用插件实例222222
+        var d3test = new d3svgTool("test", "Model.svg");
+        d3test.load();
+        //展示图层
+        var tuceng = false;
+        d3.select("#btnloadlayers").on("click", function ()
+        {
+            if (tuceng)
+            {
+                d3.select("#divlayers").html("");
+                tuceng = false;
+            } else
+            {
+                var arr = d3test.layers();
+                var option = "<ul>";
+                for (var i = 0; i < arr.length; i++)
+                {
+                    option += "<li><input id=\"btn" + arr[i] + "\" type=\"button\" class=\"layers\" value=\"是否隐藏\" isshow=\"true\" onclick=\"ShowAndHide('" + arr[i] + "')\" />" + arr[i] + "</li>"
+                }
+                option += "</ul>";
+                d3.select("#divlayers").html(option);
+                tuceng = true;
+            }
+        })
+        ///图层展示隐藏
+        function ShowAndHide(obj)
+        {
+            //console.log(obj.toString());
+            //var temp22 = d3.select(obj).attr("style");
+            //obj.attr("style", "display:none");
+            if (d3.select("#" + obj).attr("style") == null || d3.select("#" + obj).attr("style") == "")
+            {
+                d3.select("#" + obj).attr("style", "display:none");
+
+            } else
+            {
+                d3.select("#" + obj).attr("style", "");
+            }
+        }
+        function rnd2(num)
+        {
+            return Math.round(num * 100) / 100
+        }
+
+
+
+
+        document.getElementById("test").onmousemove = function (evt)
+        {
+            var result = d3test.svgCursor(d3test.Id, evt);
+
+            SvgXValue.value = result[0];// rnd2(iPNT.x)
+            SvgYValue.value = result[1];// rnd2(iPNT.y
+        }
+        var Counter = 0;
+        var firstceliangdian = true;//测量第一点
+
+        d3.select("#btninsertcircle").on("click", function ()
+        {
+            if (document.getElementById("gtempLabel") == null)
+            {
+                d3.select("g").select("svg").append("g").attr("id", "gtempLabel");
+            }
+            d3.select("g").select("svg").select("#gtempLabel")
+            //    .append("g")
+            //.attr("id", "gtempLabel")
+            .append("circle")
+            .attr("r", 200)
+            .attr("cx", d3.select("#txtX").attr("value"))
+            .attr("cy", d3.select("#txtY").attr("value"))
+            .attr("type", "circle")
+            .attr("isdrag", true)
+            .attr("id", "Labelcircle" + document.getElementById("txtId").value + Counter);
+            Counter += 1;
+        });
+        //插入矩形
+        d3.select("#btninsertrectangle").on("click", function ()
+        {
+            var rectId = d3test.AddRect(txtX.value, txtY.value, 50, 50);
+            d3test.SelectElement(rectId, function ()
+            {
+                alert(rectId + "这个矩形的点击事件");
+            })
+        });
+        d3.select("#btninserttext").on("click", function ()
+        {
+            txtInsertText.value == "" ? "这是一个文本标签" : txtInsertText.value;
+            d3test.AddText(txtInsertText.value, 100, txtX.value, txtY.value);
+        });
+        //插入图片
+        d3.select("#btninsertimage").on("click", function ()
+        {
+            var imageId = d3test.AddImage(txtX.value, txtY.value, 200, 200, "一切都是世界的错.png");
+            d3test.SelectElement(imageId, function ()
+            {
+                alert(imageId + "的回调事件");
+            })
+        })
+        //插入椭圆
+        d3.select("#btninsertellipse").on("click", function ()
+        {
+
+        });
+        d3.select("#btninsertg").on("click", function ()
+        {
+
+        });
+
+        function TempLabelList()
+        {
+            var arr = [];
+            d3.select("svg").select("gtempLabel").nodes().forEach(function (d)
+            {
+                arr.push(d.id);
+            });
+            console.log("TempLabelList");
+            console.log(arr);
+        }
+
+        d3.select("#btnSaveText").on("click", function ()
+        {
+            console.log("设置属性")
+            try
+            {
+                //console.log(document.getElementById(d3.select("#txtId").attr("value")));
+                if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "rect")
+                {//设置长宽
+
+                    d3.select("#" + document.getElementById("txtId").value).attr("width", document.getElementById("txtsetwidth").value);
+                    d3.select("#" + document.getElementById("txtId").value).attr("height", document.getElementById("txtsetheight").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "image")
+                {//设置长宽
+
+                    d3.select("#" + document.getElementById("txtId").value).attr("width", document.getElementById("txtsetwidth").value);
+                    d3.select("#" + document.getElementById("txtId").value).attr("height", document.getElementById("txtsetheight").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "circle")
+                {//设置半径
+                    d3.select("#" + document.getElementById("txtId").value).attr("r", document.getElementById("txtradius").value);
+                }
+                else if (d3.select("#" + d3.select("#txtId").attr("value")).attr("type") == "text")
+                {//设置字体大小
+                    d3.select("#" + document.getElementById("txtId").value).attr("style", "font-size:" + document.getElementById("txtFontSize").value);
+                }
+            } catch (e)
+            {
+                console.log(e);
+            }
+        })
+        document.getElementById("btnInitialization").onclick = function ()
+        {
+            d3test.Initialization();
+        }
+        document.getElementById("btnmeasure").onclick = function ()
+        {
+            d3test.setPatternType(3);
+            d3test.measureclick();
+            alert("测量模式")
+        }
+        document.getElementById("btnAddLabel").onclick = function ()
+        {
+            d3test.setPatternType(2);
+            alert("打标签模式")
+            d3test.ev("click", function ()
+            {
+                txtX.value = this.svgcoordinate[0];
+                txtY.value = this.svgcoordinate[1];
+            })
+        }
+
+        document.getElementById("btnSetBackgroundColor").onclick = function ()
+        {
+            var backcolor = document.getElementById("txtColor").value
+            d3test.SetBackgroundColor(backcolor);
+
+        }
+
+        //d3test.SelectElementColor(function (data) {
+        //    console.log("点击事件2");
+        //    console.log(data);
+        //    console.log(this);
+        //});
+        document.getElementById("btnselects").onclick = function ()
+        {
+            d3test.setPatternType(1);
+            alert("选择模式")
+            d3test.SelectElementColor(function ()
+            {
+                console.log(this);
+
+            });
+        }
+        //鼠标移动上去有个浮窗，然后再浮窗中再次设置这个标签的详细信息
+
+        //返回空白处的坐标
+        //屏幕坐标点减去SVG的起始坐标
+    </script>
+
+</body>
+</html>

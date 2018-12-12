@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+    <title>将#ffffff转换成rgb(0,0,0)格式的颜色代码</title>
+</head>
+<body>
+    <p id="p1">111111111111111</p>
+    <script language="javascript">
+
+        function reverseColor(rgbColor) {//205,15,20
+            // console.log(rgbColor);
+            rgbColor = rgbColor.replace(/\s/g, "");
+            var arrRGB = new Array(3);
+            if (rgbColor.indexOf("rgb") > -1) {
+                var colorReg = /\s*\d+,\s*\d+,\s*\d+/i;
+                var t = colorReg.exec(rgbColor)[0].split(",");
+                console.log(t);
+                for (var i = 0; i < arrRGB.length; i++) {
+                    arrRGB[i] = 255 - t[i];
+                }
+            }
+            else if (rgbColor.indexOf("#") > -1) {
+                if (rgbColor.length > 4)//"#fc0,#ffcc00"
+                {
+                    var j = 1;
+                    for (var i = 0; i < arrRGB.length; i++) {
+                        arrRGB[i] = 255 - parseInt(rgbColor.substr((i + j), 2), 16);
+                        j += 1;
+                    }
+                } else {
+                    for (var i = 0; i < arrRGB.length; i++) {
+                        var t = rgbColor.substr((i + 1), 1);
+                        t = t + t;
+                        arrRGB[i] = 255 - parseInt(t, 16);
+                    }
+                }
+            }
+            return "rgb(" + arrRGB.join(",") + ")";
+        }
+        alert(reverseColor("#F5CF45")); //将#ffffff转换成rgb(0,0,0)格式的颜色代码
+        document.getElementById("p1").style.backgroundColor = reverseColor("#F5CF45");
+        
+    </script>
+</body>
+<html>
